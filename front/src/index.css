@@ -1,0 +1,32 @@
+/* Custom styles */
+body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+/* ALTERADO: Estilo do canvas de assinatura */
+#signature-pad { border: 2px dashed #cbd5e1; border-radius: 0.5rem; cursor: crosshair; touch-action: none; }
+.nav-link.active { background-color: #e0f2fe; color: #0c4a6e; font-weight: 600; }
+.page-section { transition: opacity 0.3s ease-in-out; }
+
+/* Modal styles */
+.modal {
+    transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out;
+}
+.modal.hidden {
+    opacity: 0;
+    visibility: hidden;
+}
+.modal-content {
+    transition: transform 0.2s ease-in-out;
+    transform: scale(0.95);
+}
+.modal:not(.hidden) .modal-content {
+    transform: scale(1);
+}
+
+  /* Chat bubble styles */
+.chat-bubble { max-width: 80%; width: fit-content; }
+.chat-bubble-aluno { background-color: #f1f5f9; color: #334155; /* slate-100 /  / slate-700 */ border-radius: 0.75rem 0.75rem 0 0.75rem;}
+.chat-bubble-admin { background-color: #0369a1; /* sky-700 */ color: white; border-radius: 0.75rem 0.75rem 0 0.75rem }
+
+/* Style for disabled select option */
+select option[disabled] {
+    color: #9ca3af; /* Tailwind gray-400 */
+}
