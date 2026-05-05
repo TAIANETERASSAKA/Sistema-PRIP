@@ -1,0 +1,56 @@
+services:
+
+  # ── Banco de dados ──────────────────────────────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    container_name: cti-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Backend ─────────────────────────────────────────────────────────────────
+  back:
+    build:
+      context: ./back
+      dockerfile: Dockerfile
+    container_name: cti-back
+    restart: unless-stopped
+    env_file:
+      - ./back/.env
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+      DB_NAME: ${DB_NAME}
+    ports:
+      - "7070:7070"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # ── Frontend ─────────────────────────────────────────────────────────────────
+  front:
+    build:
+      context: ./front
+      dockerfile: Dockerfile
+    container_name: cti-front
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    depends_on:
+      - back
+
+volumes:
+  pgdata:
