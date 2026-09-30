@@ -1,5 +1,8 @@
 # Sistema-PRIP
-execute 
-docker-compose up
-e em seguida em outro terminal execute
-docker-compose exec back npx sequelize-cli db:migrate
+#execute 
+
+docker compose up --build
+
+#em seguida execute
+
+docker exec -it cti-back npx sequelize-cli db:migrate
