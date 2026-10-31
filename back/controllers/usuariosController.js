@@ -1,6 +1,4 @@
 const { Usuario } = require('../models');
-const bcrypt = require('bcrypt');
-const SALT_ROUNDS = 12;
 
 // Listar todos os usuarios
 exports.listarUsuarios = async (req, res) => {
@@ -12,19 +10,13 @@ exports.listarUsuarios = async (req, res) => {
     }
 };
 
-// Criar usuario
+// Criar usuario (pré-cadastro; nome e e-mail são atualizados pela Senha Única USP no login)
 exports.criarUsuario = async (req, res) => {
     try {
-        //se a senha for fornecida, use-a; caso contrário, gere uma senha aleatória de 8 caracteres
-        const senha = req.body.senha || Math.random().toString(36).slice(-8);
-        //hash da senha usando bcrypt
-        const hash = await bcrypt.hash(senha, SALT_ROUNDS);
-
         const novo_usuario = await Usuario.create({
             nome: req.body.nome,
             numero_usp: req.body.numero_usp,
             email: req.body.email,
-            senha: hash,
             isAdmin: req.body.isAdmin
         });
 
@@ -58,7 +50,6 @@ exports.editarUsuario = async (req, res) => {
                 nome: req.body.nome,
                 numero_usp: req.body.numero_usp,
                 email: req.body.email,
-                senha: req.body.senha,
                 isAdmin: req.body.isAdmin
             },
             {
@@ -89,43 +80,6 @@ exports.deletarUsuario = async (req, res) => {
         }
 
         res.json({success: true});
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-};
-
-exports.recuperarSenha = async (req, res) => {
-    const transporter = require('../controllers/mailer');
-
-    try {
-        const usuario = await Usuario.findOne({ where: { email: req.body.email }});
-
-        if (!usuario) {
-            return res.status(404).json({ 
-                error: "email_nao_encontrado",
-                message: "Não encontramos um usuário com este e-mail." 
-            });
-        }
-
-        const novaSenhaProvisoria = Math.random().toString(36).slice(-8);
-        const hash = await bcrypt.hash(novaSenhaProvisoria, SALT_ROUNDS);
-
-        await Usuario.update(
-            { senha: hash },
-            { where: { id_usuario: usuario.id_usuario } }
-        );
-
-        await transporter.sendMail({
-            from: `"Sistema de Empréstimos" <${process.env.EMAIL_USER}>`,
-            to: usuario.email,
-            subject: "Recuperação de Senha",
-            text: `Olá ${usuario.nome}, sua nova senha provisória é: ${novaSenhaProvisoria}\n\nRecomendamos que você acesse o sistema e altere essa senha o mais rápido possível.`
-        });
-
-        res.status(200).json({ 
-            success: true        
-        });
-
     } catch (error) {
         res.status(500).json({ error: error.message });
     }

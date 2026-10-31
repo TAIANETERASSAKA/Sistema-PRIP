@@ -2,8 +2,7 @@ import api from '../../../services/api';
 import React, { useState } from 'react';
 import Alerta from '../../../components/Toltip/Alert';
 
-function ModalAtribuirNote({ isOpen, onClose, emprestimo, notebooksDisponiveis, refreshEmprestimos }) {
-    if (!isOpen) return null; 
+function ModalAtribuirNoteConteudo({ isOpen, onClose, emprestimo, notebooksDisponiveis, refreshEmprestimos }) {
 
     //----------------Pegando o id do note selecionado---------------//
     const [selectedNotebookId, setSelectedNotebookId] = useState('');
@@ -19,16 +18,19 @@ function ModalAtribuirNote({ isOpen, onClose, emprestimo, notebooksDisponiveis, 
             'id_notebook' : parseInt(selectedNotebookId)
         }
 
-        try {
-            await api.put('/emprestimos/' + emprestimo.id_emprestimo, formData);
+        if (!selectedNotebookId) {
+            alert('Selecione um notebook disponível.');
+            return;
+        }
 
-            //Alterando o status do notebbok de disponivel (1) para em uso (2)
-            await api.put('/notebooks/' +  parseInt(selectedNotebookId), {'status': 2});   
+        try {
+            // O backend aprova o empréstimo e marca o notebook como em uso (2) na mesma operação
+            await api.put('/emprestimos/' + emprestimo.id_emprestimo, formData);
             refreshEmprestimos()
             onClose()
 
         } catch (error) {
-            const mensagem = error.response.data.message;
+            alert(error.response?.data?.message || 'Erro ao atribuir o notebook.');
         }
     }
 
@@ -71,6 +73,12 @@ function ModalAtribuirNote({ isOpen, onClose, emprestimo, notebooksDisponiveis, 
 
         </div>
     )
+}
+
+// Só monta o conteúdo quando há algo para exibir, mantendo os hooks sempre na mesma ordem
+function ModalAtribuirNote(props) {
+    if (!props.isOpen) return null;
+    return <ModalAtribuirNoteConteudo {...props} />;
 }
 
 export default ModalAtribuirNote;

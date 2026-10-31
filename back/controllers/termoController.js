@@ -48,7 +48,7 @@ async function criarTermo(req, res) {
 // GET /api/termos/:id/pdf  — download do PDF
 async function downloadPDF(req, res) {
   try {
-    const termo = await TermoCompromisso.findByPk(req.params.id);
+    const termo = await Termo_compromisso.findByPk(req.params.id);
     if (!termo) return res.status(404).json({ error: 'Termo não encontrado.' });
 
     const path = require('path');

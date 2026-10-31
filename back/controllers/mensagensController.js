@@ -20,11 +20,18 @@ exports.listarMensagens = async (req, res) => {
 
 // Criar mensagem
 exports.criarMensagem = async (req, res) => {
-    if(!req.body.id_emprestimo || !req.body.id_emprestimo) {
+    if(!req.body.id_emprestimo || !req.body.conteudo?.trim()) {
         return res.status(400).json({
             error: "campos_obrigatorios",
             message: "Por favor, preencha todos os campos obrigatórios."
         });    
+    }
+
+    if (req.body.conteudo.length > 255) {
+        return res.status(400).json({
+            error: "mensagem_longa",
+            message: "A mensagem deve ter no máximo 255 caracteres."
+        });
     }
 
     try {

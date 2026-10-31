@@ -7,6 +7,10 @@ COPY package.json package-lock.json* ./
 RUN npm ci
 
 COPY . .
+
+# Endereço da API embutido no build do front
+ARG VITE_API_URL
+ENV VITE_API_URL=$VITE_API_URL
 RUN npm run build
 
 # ── Stage 2: serve ──────────────────────────────────────────────────────────

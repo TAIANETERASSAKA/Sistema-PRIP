@@ -2,8 +2,7 @@ import { useState } from 'react';
 import { useSignaturePad } from '../../../hooks/useSignaturePad';
 import api from '../../../services/api';
 
-function ModalTermoCompromisso({ isOpen, onClose, emprestimo , refreshEmprestimos}) {
-    if (!isOpen || !emprestimo) return null;
+function ModalTermoCompromissoConteudo({ isOpen, onClose, emprestimo , refreshEmprestimos}) {
 
     const { clear, getBase64, isEmpty } = useSignaturePad('signature-pad');
     const [loading, setLoading] = useState(false);
@@ -76,6 +75,12 @@ function ModalTermoCompromisso({ isOpen, onClose, emprestimo , refreshEmprestimo
             </div>
         </div>
     );
+}
+
+// Só monta o conteúdo quando há algo para exibir, mantendo os hooks sempre na mesma ordem
+function ModalTermoCompromisso(props) {
+    if (!props.isOpen || !props.emprestimo) return null;
+    return <ModalTermoCompromissoConteudo {...props} />;
 }
 
 export default ModalTermoCompromisso;

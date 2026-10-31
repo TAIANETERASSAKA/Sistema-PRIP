@@ -11,8 +11,8 @@ services:
       POSTGRES_DB: ${DB_NAME}
     volumes:
       - pgdata:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
+    # Sem porta publicada: o back acessa o banco pela rede interna do Docker
+    # (a porta 5432 da máquina costuma estar em uso por um Postgres local)
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 10s
@@ -34,6 +34,8 @@ services:
       DB_USER: ${DB_USER}
       DB_PASS: ${DB_PASS}
       DB_NAME: ${DB_NAME}
+    volumes:
+      - uploads:/app/uploads # termos assinados não se perdem ao recriar o container
     ports:
       - "7070:7070"
     depends_on:
@@ -45,6 +47,8 @@ services:
     build:
       context: ./front
       dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:7070/api/}
     container_name: cti-front
     restart: unless-stopped
     ports:
@@ -54,3 +58,4 @@ services:
 
 volumes:
   pgdata:
+  uploads:

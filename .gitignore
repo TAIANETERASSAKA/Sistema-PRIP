@@ -1,0 +1,10 @@
+# Dependências e build
+node_modules/
+dist/
+
+# Configurações com senhas (use back/.env.example como modelo)
+.env
+back/.env
+
+# Termos assinados pelos alunos (dados pessoais)
+back/uploads/

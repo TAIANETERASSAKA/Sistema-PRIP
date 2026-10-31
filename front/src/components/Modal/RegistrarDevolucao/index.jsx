@@ -3,8 +3,7 @@ import React, { useState } from 'react';
 import api from '../../../services/api';
 import Alerta from '../../../components/Toltip/Alert';
 
-function ModalRegistDevolucao({ isOpen, onClose, emprestimo, refreshEmprestimos }) {
-    if (!isOpen || !emprestimo) return null;
+function ModalRegistDevolucaoConteudo({ isOpen, onClose, emprestimo, refreshEmprestimos }) {
     const [alerta, setAlerta] = useState(null); 
     
     //----------------Pegando o valor da observacao---------------//
@@ -103,6 +102,12 @@ function ModalRegistDevolucao({ isOpen, onClose, emprestimo, refreshEmprestimos 
             )}
         </div>
     );
+}
+
+// Só monta o conteúdo quando há algo para exibir, mantendo os hooks sempre na mesma ordem
+function ModalRegistDevolucao(props) {
+    if (!props.isOpen || !props.emprestimo) return null;
+    return <ModalRegistDevolucaoConteudo {...props} />;
 }
 
 export default ModalRegistDevolucao;

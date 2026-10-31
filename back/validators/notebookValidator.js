@@ -22,7 +22,7 @@ const validar = (req, res, next) => {
   if (!erros.isEmpty()) {
     return res.status(400).json({
       error: "campos_invalidos",
-      mensagens: erros.array().map(e => e.msg)
+      message: erros.array().map(e => e.msg)
     });
   }
   next();

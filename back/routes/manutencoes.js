@@ -1,6 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const manutencoesController = require('../controllers/manutencoesController');
+const { validarAdmin } = require('../validators/acessoValidator');
+
+// Apenas administradores (CIP)
+router.use(validarAdmin);
 
 // GET /manutencoes
 router.get('/:id_notebook', manutencoesController.listarManutencao);
