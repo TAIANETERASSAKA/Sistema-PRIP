@@ -21,7 +21,14 @@ if (process.env.COOKIE_SECURE === 'true') {
 }
 
 // Cabeçalhos de segurança HTTP
-app.use(helmet());
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            // O formulário de login simulado redireciona para o front, que está em outra origem
+            formAction: ["'self'", process.env.FRONTEND_URL || 'http://localhost:8080']
+        }
+    }
+}));
 
 app.use(cors({
     origin: process.env.FRONTEND_URL || 'http://localhost:8080',
