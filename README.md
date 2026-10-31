@@ -1,12 +1,3 @@
-# Sistema-PRIP
-#execute 
-
-docker compose up --build
-
-#em seguida execute
-
-docker exec -it cti-back npx sequelize-cli db:migrate
-
 ## Login pela Senha Única USP
 
 O acesso é feito pela Senha Única USP (OAuth 1.0a da STI). O sistema não guarda senhas.
