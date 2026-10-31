@@ -1,6 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const notebookController = require('../controllers/notebooksController');
+const { validarAdmin } = require('../validators/acessoValidator');
+
+// Apenas administradores (CIP)
+router.use(validarAdmin);
 const { validarCriar, validarEditar } = require('../validators/notebookValidator');
 
 // GET /notebooks

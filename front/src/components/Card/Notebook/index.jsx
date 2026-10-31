@@ -5,8 +5,7 @@ import ModalEditarNote from '../../Modal/EditarNote';
 import { useEffect, useState } from 'react';
 import api from '../../../services/api';
 
-function CardNotebook({ notebook, refreshList }) {
-    if (!notebook) return null;
+function CardNotebookConteudo({ notebook, refreshList }) {
 
     // --- Estados para Controle dos Modais ---
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -136,6 +135,12 @@ function CardNotebook({ notebook, refreshList }) {
             />
         </div>
     );
+}
+
+// Só monta o conteúdo quando há algo para exibir, mantendo os hooks sempre na mesma ordem
+function CardNotebook(props) {
+    if (!props.notebook) return null;
+    return <CardNotebookConteudo {...props} />;
 }
 
 export default CardNotebook;

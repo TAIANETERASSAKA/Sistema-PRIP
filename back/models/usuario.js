@@ -33,9 +33,10 @@ module.exports = (sequelize, DataTypes) => {
       unique: true,
       allowNull: false 
     },
+    // Não é mais usada: o login é feito pela Senha Única USP
     senha: {
       type: DataTypes.STRING,
-      allowNull: false 
+      allowNull: true
     },
     isAdmin:{
       type: DataTypes.BOOLEAN,
@@ -44,7 +45,10 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     sequelize,
     modelName: 'Usuario',
-    tableName: 'Usuarios'
+    tableName: 'Usuarios',
+    defaultScope: {
+      attributes: { exclude: ['senha'] }
+    }
   });
   return Usuario;
 };

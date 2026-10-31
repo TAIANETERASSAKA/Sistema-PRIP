@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import api from '../../../services/api';
 import Alerta from '../../../components/Toltip/Alert';
 
-function ModalAddUsuario({ isOpen, onClose, refreshList }) {
-    if (!isOpen) return null;
+function ModalAddUsuarioConteudo({ isOpen, onClose, refreshList }) {
     const [alerta, setAlerta] = useState(null); 
     const [carregando, setCarregando] = useState(false); 
 
@@ -43,7 +42,7 @@ function ModalAddUsuario({ isOpen, onClose, refreshList }) {
             }
         } catch (error) {       
             const data = error.response?.data;
-            const mensagemErro = (typeof data.message === 'string' ? data.message : data.message[0])|| 'Erro ao criar cadastro.';
+            const mensagemErro = (Array.isArray(data?.message) ? data.message[0] : data?.message) || 'Erro ao criar cadastro.';
             
             setAlerta({
                 tipo: 'erro',
@@ -96,6 +95,12 @@ function ModalAddUsuario({ isOpen, onClose, refreshList }) {
             )}
         </div>
     );
+}
+
+// Só monta o conteúdo quando há algo para exibir, mantendo os hooks sempre na mesma ordem
+function ModalAddUsuario(props) {
+    if (!props.isOpen) return null;
+    return <ModalAddUsuarioConteudo {...props} />;
 }
 
 export default ModalAddUsuario;

@@ -2,8 +2,7 @@ import FecharBtn from '../../../components/Botao/FecharModal';
 import api from '../../../services/api';
 import React, { useEffect, useState } from 'react';
 
-function ModalChat({ isOpen, onClose, emprestimo, onOpenAtribuirModal, refreshEmprestimos }) {
-    if (!isOpen || !emprestimo) return null;
+function ModalChatConteudo({ isOpen, onClose, emprestimo, onOpenAtribuirModal, refreshEmprestimos }) {
 
     const usuario = JSON.parse(sessionStorage.getItem('usuario'));
 
@@ -135,6 +134,12 @@ function ModalChat({ isOpen, onClose, emprestimo, onOpenAtribuirModal, refreshEm
     </div>
 
     );
+}
+
+// Só monta o conteúdo quando há algo para exibir, mantendo os hooks sempre na mesma ordem
+function ModalChat(props) {
+    if (!props.isOpen || !props.emprestimo) return null;
+    return <ModalChatConteudo {...props} />;
 }
 
 export default ModalChat;

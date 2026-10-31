@@ -6,7 +6,7 @@ const Menu = () => {
   const navigate = useNavigate();
   const logout = async () => {
     try {
-        await api.post('/login/logout');
+        await api.post('/auth/logout');
         sessionStorage.removeItem('usuario');
         navigate('/login');
     } catch (error) {

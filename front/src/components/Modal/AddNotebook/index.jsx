@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import api from '../../../services/api';
 
-function ModalAddNote({ isOpen, onClose, refreshList }) {
-    if (!isOpen) return null;
+function ModalAddNoteConteudo({ isOpen, onClose, refreshList }) {
 
     // Estados para os campos do formulário
     const [formData, setFormData] = useState({
@@ -28,7 +27,8 @@ function ModalAddNote({ isOpen, onClose, refreshList }) {
             refreshList();
             onClose();
         } catch (error) {
-            alert(error.response.data.message);
+            const mensagem = error.response?.data?.message;
+            alert((Array.isArray(mensagem) ? mensagem.join('\n') : mensagem) || 'Erro ao cadastrar o notebook.');
        }
     };
     
@@ -71,6 +71,12 @@ function ModalAddNote({ isOpen, onClose, refreshList }) {
         </div>
 
     );
+}
+
+// Só monta o conteúdo quando há algo para exibir, mantendo os hooks sempre na mesma ordem
+function ModalAddNote(props) {
+    if (!props.isOpen) return null;
+    return <ModalAddNoteConteudo {...props} />;
 }
 
 export default ModalAddNote;

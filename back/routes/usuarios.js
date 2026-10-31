@@ -2,6 +2,10 @@ const express = require('express');
 const router = express.Router();
 const usuarioController = require('../controllers/usuariosController');
 const { validarCriar } = require('../validators/usuarioValidator');
+const { validarAdmin } = require('../validators/acessoValidator');
+
+// Apenas administradores (CIP) podem gerenciar usuários
+router.use(validarAdmin);
 
 // GET /usuarios
 router.get('/', usuarioController.listarUsuarios);
@@ -14,8 +18,5 @@ router.put('/:id', usuarioController.editarUsuario);
 
 // DELETE /usuarios/:id
 router.delete('/:id', usuarioController.deletarUsuario);
-
-// post /usuarios
-router.post('/recuperar', usuarioController.recuperarSenha);
 
 module.exports = router;

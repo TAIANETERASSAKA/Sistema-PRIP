@@ -24,7 +24,8 @@ module.exports = (sequelize, DataTypes) => {
     id_emprestimo: DataTypes.INTEGER,
     id_notebook: DataTypes.INTEGER,
     motivo: DataTypes.STRING,
-    data_entrada: DataTypes.DATE
+    data_entrada: DataTypes.DATE,
+    data_finalizada: DataTypes.DATE
   }, {
     sequelize,
     modelName: 'Manutencao',

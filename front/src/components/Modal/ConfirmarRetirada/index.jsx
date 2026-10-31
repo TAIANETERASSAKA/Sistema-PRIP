@@ -4,8 +4,7 @@ import React, { useState } from 'react';
 import Alerta from '../../../components/Toltip/Alert';
 
 
-function ModalConfirRetirada({ isOpen, onClose, emprestimo, onContinuar }) {
-    if (!isOpen || !emprestimo) return null;
+function ModalConfirRetiradaConteudo({ isOpen, onClose, emprestimo, onContinuar }) {
 
     const [alerta, setAlerta] = useState(null); 
     
@@ -35,7 +34,7 @@ function ModalConfirRetirada({ isOpen, onClose, emprestimo, onContinuar }) {
             onContinuar();
         } catch (error) {
             const data = error.response?.data;
-            const mensagemErro = (typeof data.message === 'string' ? data.message : data.message[0])|| 'Erro ao criar cadastro.';
+            const mensagemErro = (Array.isArray(data?.message) ? data.message[0] : data?.message) || 'Erro ao criar cadastro.';
             
             setAlerta({
                 tipo: 'erro',
@@ -90,6 +89,12 @@ function ModalConfirRetirada({ isOpen, onClose, emprestimo, onContinuar }) {
         )}
     </div>
     );
+}
+
+// Só monta o conteúdo quando há algo para exibir, mantendo os hooks sempre na mesma ordem
+function ModalConfirRetirada(props) {
+    if (!props.isOpen || !props.emprestimo) return null;
+    return <ModalConfirRetiradaConteudo {...props} />;
 }
 
 export default ModalConfirRetirada;

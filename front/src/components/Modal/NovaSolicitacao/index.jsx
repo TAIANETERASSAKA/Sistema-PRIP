@@ -1,8 +1,7 @@
 import { useState } from "react";
 import api from '../../../services/api';
 
-function NovaSolicitacao({ isOpen, onClose }){
-    if (!isOpen) return null;
+function NovaSolicitacaoConteudo({ isOpen, onClose }) {
 
     const [justificativa, setJustificativa] = useState(''); // Estado simples
 
@@ -14,12 +13,12 @@ function NovaSolicitacao({ isOpen, onClose }){
         };
 
         try{ 
-            console.log(formData);
             await api.post('/emprestimos', formData);
             alert('Solicitação enviada com sucesso!');
             onClose()
         }catch(error){
-            alert(error.response.data.message)
+            const mensagem = error.response?.data?.message;
+            alert((Array.isArray(mensagem) ? mensagem.join('\n') : mensagem) || 'Erro ao enviar a solicitação.')
         }
     }
 
@@ -52,5 +51,11 @@ function NovaSolicitacao({ isOpen, onClose }){
     </div>
     );
 };
+
+// Só monta o conteúdo quando há algo para exibir, mantendo os hooks sempre na mesma ordem
+function NovaSolicitacao(props) {
+    if (!props.isOpen) return null;
+    return <NovaSolicitacaoConteudo {...props} />;
+}
 
 export default NovaSolicitacao;

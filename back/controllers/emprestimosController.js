@@ -1,37 +1,59 @@
-const { Emprestimo, Usuario, Notebook } = require('../models');
+const { sequelize, Emprestimo, Usuario, Notebook } = require('../models');
 const { Op } = require('sequelize'); // Importante para usar operadores como o IN
 const { enviarEmail } = require('../services/emailService');
 
+// Status do empréstimo
+const STATUS = { PENDENTE: 1, APROVADO: 2, RETIRADO: 3, DEVOLVIDO: 4, ATRASADO: 5, RECUSADO: 6 };
+const STATUS_ATIVOS = [STATUS.PENDENTE, STATUS.APROVADO, STATUS.RETIRADO, STATUS.ATRASADO];
+
+// Status do notebook
+const NOTEBOOK_DISPONIVEL = 1;
+const NOTEBOOK_EMPRESTADO = 2;
+
+// Erro com código HTTP, usado para interromper a transação com uma resposta amigável
+class ErroHttp extends Error {
+  constructor(status, error, message) {
+    super(message);
+    this.status = status;
+    this.error = error;
+  }
+}
+
+// Busca o empréstimo com o usuário e envia o e-mail de atualização (sem travar a resposta)
+const notificarAluno = async (id_emprestimo) => {
+  const emprestimo = await Emprestimo.findByPk(id_emprestimo, {
+    include: [{ model: Usuario, as: 'usuario' }]
+  });
+  enviarEmail(emprestimo);
+};
+
 exports.criarEmprestimo = async (req, res) => {
   try {
-    // Verificar se o usuário está na sessão
-    if (!req.session.usuario || !req.session  || !req.session.usuario.id_usuario) {
-      return res.status(401).json({ 
-        error: "nao_autenticado",
-        message: "Usuário não está logado. Faça login primeiro.",
-        sessionExists: !!req.session,
-        sessionID: req.sessionID
+    // Pegando o id_usuario da sessao (garantida pelo validarSessao)
+    const id_usuario = req.session.usuario.id_usuario;
+
+    // RF13: apenas um notebook por aluno por vez
+    const emprestimoAtivo = await Emprestimo.findOne({
+      where: { id_usuario, status: { [Op.in]: STATUS_ATIVOS } }
+    });
+
+    if (emprestimoAtivo) {
+      return res.status(409).json({
+        error: "emprestimo_ativo",
+        message: "Você já possui uma solicitação ou empréstimo em andamento. Só é permitido um notebook por aluno por vez."
       });
     }
-    
-    // Pegando o id_usuario da sessao
-    const id_usuario = req.session.usuario.id_usuario;
+
     const emprestimo = await Emprestimo.create({
       id_usuario: id_usuario,
       justificativa: req.body.justificativa,
-      status: 1,
+      status: STATUS.PENDENTE,
       data_solicitacao: new Date()
     });
 
-    const emprestimoCriado = await Emprestimo.findByPk(emprestimo.id_emprestimo, {
-      include: [
-        { model: Usuario, as: 'usuario' }
-      ]
-    });
-
-    enviarEmail(emprestimoCriado);
-        
     res.status(201).json({success: true, emprestimo: emprestimo});
+
+    notificarAluno(emprestimo.id_emprestimo).catch(console.error);
   } catch (error) {
     console.error('Erro no criarEmprestimo:', error);
     res.status(500).json({ success: false, message: error.message });
@@ -54,52 +76,67 @@ exports.listarEmprestimos = async (req, res) => {
 };
 
 exports.editarEmprestimo = async (req, res) => {
+  const { status, id_notebook, data_devolucao_prevista } = req.body;
+
+  if (status === STATUS.RETIRADO && !data_devolucao_prevista) {
+    return res.status(400).json({      
+      error: "campos_ausentes",
+      message: "Para confirmar a retirada de um notebook, é necessário definir a data de devolução prevista."
+    });
+  }
+
+  if (data_devolucao_prevista && new Date(data_devolucao_prevista) <= new Date()) {
+    return res.status(400).json({      
+      error: "campos_ausentes",
+      message: "A data de devolução prevista deve ser uma data futura."
+    });
+  }
+
+  if (status === STATUS.APROVADO && !id_notebook) {
+    return res.status(400).json({
+      error: "campos_ausentes",
+      message: "Selecione um notebook disponível para aprovar a solicitação."
+    });
+  }
+
   try {
+    // Transação: o empréstimo e o notebook são atualizados juntos, ou nada é alterado
+    await sequelize.transaction(async (transaction) => {
+      const emprestimo = await Emprestimo.findByPk(req.params.id, { transaction, lock: transaction.LOCK.UPDATE });
 
-    if(req.body.status === 3 && !req.body.data_devolucao_prevista){
-      return res.status(500).json({      
-        error: "campos_ausentes",
-        message: "Para confirmar a retirada de um notebook, é necessário definir a data de devolução prevista."
-      })
-    }
+      if (!emprestimo) {
+        throw new ErroHttp(404, "nao_encontrado", "Empréstimo não encontrado");
+      }
 
-    if(new Date(req.body.data_devolucao_prevista) <= new Date()){
-      return res.status(500).json({      
-        error: "campos_ausentes",
-        message: "A data de devolução prevista deve ser uma data futura."
-      })
-    }
+      // RF07: só é possível atribuir um notebook disponível.
+      // O lock impede que dois administradores atribuam o mesmo notebook ao mesmo tempo.
+      if (id_notebook && id_notebook !== emprestimo.id_notebook) {
+        const notebook = await Notebook.findByPk(id_notebook, { transaction, lock: transaction.LOCK.UPDATE });
 
-    const [linhasAfetadas, emprestimosAtualizados] = await Emprestimo.update(
-      {
-        data_retirada: req.body.data_retirada ,
-        data_recusa: req.body.data_recusa ,
-        data_devolucao_prevista: req.body.data_devolucao_prevista,
-        data_devolucao_real : req.body.data_devolucao_real,
-        status: req.body.status,
-        id_notebook: req.body.id_notebook,
+        if (!notebook || notebook.status !== NOTEBOOK_DISPONIVEL) {
+          throw new ErroHttp(409, "notebook_indisponivel", "Este notebook não está mais disponível. Escolha outro.");
+        }
+        await notebook.update({ status: NOTEBOOK_EMPRESTADO }, { transaction });
+      }
+
+      await emprestimo.update({
+        data_retirada: req.body.data_retirada,
+        data_recusa: req.body.data_recusa,
+        data_devolucao_prevista: data_devolucao_prevista,
+        data_devolucao_real: req.body.data_devolucao_real,
+        status: status,
+        id_notebook: id_notebook,
         observacao: req.body.observacao
-      },
-      {
-        where: { id_emprestimo: req.params.id }
-      },
-
-    );
-
-    if (linhasAfetadas === 0) {
-      return res.status(404).json({ message: 'Empréstimo não encontrado' });
-    }
-
-    res.status(201).json({success: true, emprestimosAtualizados: emprestimosAtualizados});
-
-    const dadosParaEmail = await Emprestimo.findByPk(req.params.id, {
-      include: [
-        { model: Usuario, as: 'usuario' }
-      ]
+      }, { transaction });
     });
 
-    enviarEmail(dadosParaEmail);
+    res.status(201).json({success: true});
+
+    notificarAluno(req.params.id).catch(console.error);
   } catch (error) {
+    if (error instanceof ErroHttp) {
+      return res.status(error.status).json({ error: error.error, message: error.message });
+    }
     res.status(500).json({ error: error.message });
   }
 };
@@ -147,21 +184,7 @@ exports.buscarEmprestimoAtual = async (req, res) => {
 
 exports.buscarSolicitacoes = async (req, res) => {
   try {
-    if (!req.session) {
-      return res.status(401).json({ 
-        error: "sessao_inexistente",
-        message: "Sessão não encontrada. Verifique se o servidor está configurado corretamente."
-      });
-    }
-    
-    // Verificar se tem id_usuario
-    if (!req.session.usuario.id_usuario || !req.session.usuario) {
-      return res.status(401).json({ 
-        error: "sessao_invalida",
-        message: "Sessão não contém id_usuario. Faça login novamente."
-      });
-    }
-
+    // Sessão garantida pelo validarSessao nas rotas
     const id_usuario = req.session.usuario.id_usuario;
     const emprestimo = await Emprestimo.findAll({
       where: {
@@ -187,31 +210,7 @@ exports.buscarSolicitacoes = async (req, res) => {
 
 exports.buscarEmprestimoAluno= async (req, res) => {
   try {
-    if (!req.session) {
-      return res.status(401).json({ 
-        error: "sessao_inexistente",
-        message: "Sessão não encontrada. Verifique se o servidor está configurado corretamente."
-      });
-    }
-    
-    // Verificar se o usuário está na sessão
-    if (!req.session.usuario) {
-      return res.status(401).json({ 
-        error: "nao_autenticado",
-        message: "Usuário não está logado. Faça login primeiro.",
-        sessionExists: !!req.session,
-        sessionID: req.sessionID
-      });
-    }
-    
-    // Verificar se tem id_usuario
-    if (!req.session.usuario.id_usuario) {
-      return res.status(401).json({ 
-        error: "sessao_invalida",
-        message: "Sessão não contém id_usuario. Faça login novamente."
-      });
-    }
-
+    // Sessão garantida pelo validarSessao nas rotas
     const id_usuario = req.session.usuario.id_usuario;
     const emprestimo = await Emprestimo.findAll({
       where: {

@@ -3,8 +3,7 @@ import Alerta from '../../../components/Toltip/Alert';
 import React, { useState } from 'react';
 import api from '../../../services/api';
 
-function ModalEditarNote({ isOpen, onClose, notebook, refreshList }) {
-    if (!isOpen || !notebook) return null;
+function ModalEditarNoteConteudo({ isOpen, onClose, notebook, refreshList }) {
 
     const [selectedStatus, setSelectedStatus] = useState(notebook.status);
     const [observacao, setObservacao] = useState('');
@@ -144,6 +143,12 @@ function ModalEditarNote({ isOpen, onClose, notebook, refreshList }) {
             )}
         </>
     );
+}
+
+// Só monta o conteúdo quando há algo para exibir, mantendo os hooks sempre na mesma ordem
+function ModalEditarNote(props) {
+    if (!props.isOpen || !props.notebook) return null;
+    return <ModalEditarNoteConteudo {...props} />;
 }
 
 export default ModalEditarNote;

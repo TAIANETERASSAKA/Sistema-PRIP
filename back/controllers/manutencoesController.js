@@ -1,4 +1,4 @@
-const {  Emprestimo, Manutencao } = require('../models');
+const { Manutencao } = require('../models');
 
 exports.criarManutencao = async (req, res) => {
   try {
@@ -30,7 +30,7 @@ exports.listarManutencao = async (req, res) => {
 exports.editarManutencao = async (req, res) => {
   try {
 
-    const [linhasAfetadas, manutencoesAtualizados] = await Emprestimo.update(
+    const [linhasAfetadas, manutencoesAtualizados] = await Manutencao.update(
       {
         data_finalizada: req.body.data_finalizada ,
       },

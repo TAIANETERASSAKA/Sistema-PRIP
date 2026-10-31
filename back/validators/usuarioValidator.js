@@ -12,9 +12,6 @@ const regras = {
     .notEmpty().withMessage('O email é obrigatório')
     .isEmail().withMessage('Insira um email válido'),
 
-    senha: body('senha')
-    .notEmpty().withMessage('A senha é obrigatória'),
-
     isAdmin: body('isAdmin')
     .notEmpty().withMessage('O tipo de usuário é obrigatório'),
 };
@@ -31,6 +28,4 @@ const validar = (req, res, next) => {
 };
 
 const validarCriar = [regras.nome, regras.numero_usp, regras.email, regras.isAdmin, validar];
-const validarLogin = [regras.numero_usp, regras.senha, validar];
-
-module.exports = { validarCriar, validarLogin };
+module.exports = { validarCriar };

@@ -18,9 +18,7 @@ import AlunoSolicitacao from './pages/Aluno/Solicitacao';
 
 import LoginLayout from './pages/Login/Layout';
 import Login from './pages/Login/Login'; 
-import Cadastro from './pages/Login/Cadastro'; 
-import Loginfea from './login.jsx';
-import Recuperar from './pages/Login/RecuperarSenha'; 
+import Retorno from './pages/Login/Retorno'; 
 
 
 
@@ -47,9 +45,7 @@ createRoot(document.getElementById('root')).render(
         <Route path="/" element={<LoginLayout />}>
           <Route index element={<Navigate to="/login" replace />} />
           <Route path="login" element={<Login />} />
-          <Route path="loginfea" element={<Loginfea />} />
-          <Route path="cadastro" element={<Cadastro />} />
-          <Route path="recuperar" element={<Recuperar />} />
+          <Route path="auth/retorno" element={<Retorno />} />
         </Route>
         
         {/* Rotas do Administrador */}
